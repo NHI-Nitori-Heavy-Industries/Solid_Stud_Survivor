@@ -31,6 +31,9 @@ TEXT = {
     ),
     "模型尺寸": "Model size",
     "設定成品寬度": "Set finished width",
+    "寬度單位": "Width unit",
+    "毫米 (mm)": "Millimeters (mm)",
+    "Stud（7.8 mm）": "Studs (7.8 mm each)",
     "設定縮放倍率": "Set scale",
     "模型單位轉 mm，例如 0.0259": "Model units to mm, e.g. 0.0259",
     "選項": "Options",
@@ -113,6 +116,8 @@ class Obj2StudApp:
         self.part_name = tk.StringVar()
         self.size_mode = tk.StringVar(value="width")
         self.width = tk.StringVar()
+        self.width_unit = tk.StringVar(value="mm")
+        self.width_unit_display = tk.StringVar(value="毫米 (mm)")
         self.scale = tk.StringVar()
         self.faces = tk.StringVar()
         self.min_piece = tk.StringVar(value="0")
@@ -174,7 +179,7 @@ class Obj2StudApp:
 
         sizing = ttk.LabelFrame(outer, text="模型尺寸", padding=8)
         sizing.grid(row=4, column=0, columnspan=3, sticky="ew", pady=(8, 5))
-        sizing.columnconfigure(2, weight=1)
+        sizing.columnconfigure(3, weight=1)
         ttk.Radiobutton(
             sizing,
             text="設定成品寬度",
@@ -184,7 +189,16 @@ class Obj2StudApp:
         ).grid(row=0, column=0, sticky="w")
         self.width_entry = ttk.Entry(sizing, textvariable=self.width, width=12)
         self.width_entry.grid(row=0, column=1, sticky="w", padx=(8, 4))
-        ttk.Label(sizing, text="mm").grid(row=0, column=2, sticky="w")
+        self.width_unit_selector = ttk.Combobox(
+            sizing,
+            textvariable=self.width_unit_display,
+            state="readonly",
+            width=20,
+        )
+        self.width_unit_selector.grid(row=0, column=2, sticky="w")
+        self.width_unit_selector.bind(
+            "<<ComboboxSelected>>", self._select_width_unit
+        )
 
         ttk.Radiobutton(
             sizing,
@@ -196,7 +210,7 @@ class Obj2StudApp:
         self.scale_entry = ttk.Entry(sizing, textvariable=self.scale, width=12)
         self.scale_entry.grid(row=1, column=1, sticky="w", padx=(8, 4), pady=(6, 0))
         ttk.Label(sizing, text="模型單位轉 mm，例如 0.0259").grid(
-            row=1, column=2, sticky="w", pady=(6, 0)
+            row=1, column=2, columnspan=2, sticky="w", pady=(6, 0)
         )
 
         options = ttk.LabelFrame(outer, text="選項", padding=8)
@@ -332,8 +346,24 @@ class Obj2StudApp:
         )
         for parent in (self.root,):
             self._translate_widgets(parent)
+        self.width_unit_selector.configure(
+            values=(
+                self._tr("毫米 (mm)"),
+                self._tr("Stud（7.8 mm）"),
+            )
+        )
+        self.width_unit_display.set(
+            self._tr("毫米 (mm)" if self.width_unit.get() == "mm" else "Stud（7.8 mm）")
+        )
         self.status.set(self._tr(self.status.get()))
         self._render_objects()
+
+    def _select_width_unit(self, _event=None):
+        self.width_unit.set(
+            "mm"
+            if self.width_unit_display.get() == self._tr("毫米 (mm)")
+            else "studs"
+        )
 
     def _translate_widgets(self, parent):
         for child in parent.winfo_children():
@@ -512,7 +542,12 @@ class Obj2StudApp:
         scale = None
         try:
             if self.size_mode.get() == "width":
-                width = obj2stud.valid_positive_float(self.width.get().strip())
+                width_value = obj2stud.valid_positive_float(self.width.get().strip())
+                width = (
+                    obj2stud.studs_to_mm(width_value)
+                    if self.width_unit.get() == "studs"
+                    else width_value
+                )
             else:
                 scale = obj2stud.valid_positive_float(self.scale.get().strip())
         except (ValueError, TypeError) as exc:

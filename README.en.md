@@ -35,8 +35,10 @@ Use the language selector in the upper-right corner to switch between Traditiona
 1. Select an `.obj` or `.stl` model.
 2. The application scans the model and lists object names and face counts. Select the objects to export; all objects are selected by default.
 3. The default output root is `%LOCALAPPDATA%\Stud.io\CustomParts`. The application places the files in the `parts`, `collider`, and `connectivity` subfolders. You can choose a different output root in the window.
-4. Set either the finished width in millimeters or a model-unit-to-millimeter scale.
+4. Set either the finished width in millimeters or studs (1 stud = 7.8 mm), or enter a model-unit-to-millimeter scale.
 5. Adjust the minimum piece size, face-reduction target, or Z-up option if needed, then click **Start Conversion**. The minimum piece size defaults to 0 (no removal) to avoid accidentally deleting model details.
+
+After conversion, the message panel shows the model's width, height, and length in both millimeters and studs.
 
 Input models are assumed to use Y-up coordinates. Enable the Z-up option for models that use Z as the up axis. The output is centered in X/Z, rests at Y=0, and uses the LDraw coordinate system.
 

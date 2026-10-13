@@ -1,7 +1,10 @@
+import io
 import os
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 
@@ -73,6 +76,10 @@ usemtl red
 
         self.assertEqual(args.min_piece, 0.0)
 
+    def test_stud_width_converts_to_millimeters(self):
+        self.assertEqual(obj2stud.studs_to_mm("1"), 7.8)
+        self.assertEqual(obj2stud.studs_to_mm("2.5"), 19.5)
+
 
 class WritePartTests(unittest.TestCase):
     def test_writes_a_plain_dat_header_and_separate_sidecars(self):
@@ -101,6 +108,37 @@ class WritePartTests(unittest.TestCase):
             self.assertTrue(any(line.startswith("3 16 ") for line in dat_lines))
             self.assertTrue(Path(collider, "triangle.col").is_file())
             self.assertTrue(Path(connectivity, "triangle.conn").is_file())
+
+    def test_conversion_reports_dimensions_in_studs(self):
+        source = """o triangle
+v 0 0 0
+v 1 0 0
+v 0 1 0
+f 1 2 3
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "triangle.obj"
+            path.write_text(source, encoding="utf-8")
+            args = SimpleNamespace(
+                input=str(path),
+                width=7.8,
+                scale=None,
+                faces=None,
+                min_piece=0,
+                drop=[],
+                zup=False,
+                name="triangle",
+                out=directory,
+                author="Aioli",
+                weld_tol=1e-5,
+                list=False,
+            )
+            output = io.StringIO()
+
+            with redirect_stdout(output):
+                obj2stud.run(args)
+
+        self.assertIn("Dimensions: 1.00 x 1.00 x 0.00 studs", output.getvalue())
 
 
 if __name__ == "__main__":

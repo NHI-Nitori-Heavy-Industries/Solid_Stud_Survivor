@@ -26,6 +26,12 @@ import struct
 import numpy as np
 
 LDU_MM = 0.4
+STUD_MM = 7.8
+
+
+def studs_to_mm(stud_count):
+    """Convert a width expressed in studs to millimeters."""
+    return valid_positive_float(stud_count) * STUD_MM
 
 
 def strip_obj_comment(line):
@@ -461,6 +467,7 @@ def run(args):
     )
 
     size = millimeter_points.max(axis=0) - millimeter_points.min(axis=0)
+    size_studs = size / STUD_MM
     print(f"Scale: {scale:.6g} (approximately 1:{1000 / scale:.1f} if source units are meters)")
     if dropped:
         print(f"Removed {len(dropped)} object(s): {', '.join(dropped)}")
@@ -469,6 +476,10 @@ def run(args):
     print(
         f"Exported {len(faces)} faces; size "
         f"{size[0]:.1f} x {size[1]:.1f} x {size[2]:.1f} mm (width x height x length)"
+    )
+    print(
+        f"Dimensions: {size_studs[0]:.2f} x {size_studs[1]:.2f} x "
+        f"{size_studs[2]:.2f} studs (1 stud = {STUD_MM:g} mm)"
     )
     if extension == ".obj":
         has_material_assignments, missing_libraries = obj_material_info(args.input)
