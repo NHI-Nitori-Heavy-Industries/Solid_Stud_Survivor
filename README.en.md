@@ -36,9 +36,11 @@ Use the language selector in the upper-right corner to switch between Traditiona
 2. The application scans the model and lists object names and face counts. Select the objects to export; all objects are selected by default.
 3. The default output root is `%LOCALAPPDATA%\Stud.io\CustomParts`. The application places the files in the `parts`, `collider`, and `connectivity` subfolders. You can choose a different output root in the window.
 4. Set either the finished width in millimeters or a model-unit-to-millimeter scale.
-5. Adjust the minimum piece size, face-reduction target, or Z-up option if needed, then click **Start Conversion**.
+5. Adjust the minimum piece size, face-reduction target, or Z-up option if needed, then click **Start Conversion**. The minimum piece size defaults to 0 (no removal) to avoid accidentally deleting model details.
 
 Input models are assumed to use Y-up coordinates. Enable the Z-up option for models that use Z as the up axis. The output is centered in X/Z, rests at Y=0, and uses the LDraw coordinate system.
+
+OBJ `o` objects are listed as selectable components; `g` groups are used only when the OBJ has no `o` objects. OBJ material colors are not currently imported, so output triangles use the Stud.io part's main color. If a referenced `.mtl` file is missing, its source color information is unavailable.
 
 ## Command-line conversion
 

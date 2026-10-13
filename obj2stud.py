@@ -22,11 +22,18 @@ import argparse
 import fnmatch
 import os
 import struct
-import sys
 
 import numpy as np
 
 LDU_MM = 0.4
+
+
+def strip_obj_comment(line):
+    """Remove OBJ comments without treating '#' inside a name as a comment."""
+    for index, character in enumerate(line):
+        if character == "#" and (index == 0 or line[index - 1].isspace()):
+            return line[:index].strip()
+    return line.strip()
 
 
 def read_obj(path):
@@ -37,8 +44,14 @@ def read_obj(path):
     current_group = "default"
 
     with open(path, "r", encoding="utf-8", errors="replace") as source:
+        has_objects = any(
+            (line := strip_obj_comment(raw_line)).split(maxsplit=1)[:1] == ["o"]
+            for raw_line in source
+        )
+
+    with open(path, "r", encoding="utf-8", errors="replace") as source:
         for line_number, raw_line in enumerate(source, start=1):
-            line = raw_line.split("#", 1)[0].strip()
+            line = strip_obj_comment(raw_line)
             if not line:
                 continue
             fields = line.split()
@@ -51,7 +64,10 @@ def read_obj(path):
                     vertices.append(tuple(float(value) for value in fields[1:4]))
                 except ValueError as exc:
                     raise ValueError(f"OBJ line {line_number}: invalid vertex coordinates") from exc
-            elif command in ("o", "g"):
+            elif command == "o":
+                if has_objects:
+                    current_group = " ".join(fields[1:]) or "default"
+            elif command == "g" and not has_objects:
                 current_group = " ".join(fields[1:]) or "default"
             elif command == "f":
                 if len(fields) < 4:
@@ -86,6 +102,25 @@ def read_obj(path):
         if groups[name]
     ]
     return vertex_array, faces
+
+
+def obj_material_info(path):
+    """Return material libraries referenced by an OBJ and those not found beside it."""
+    libraries = []
+    has_material_assignments = False
+    with open(path, "r", encoding="utf-8", errors="replace") as source:
+        for raw_line in source:
+            line = strip_obj_comment(raw_line)
+            fields = line.split()
+            if not fields:
+                continue
+            if fields[0] == "mtllib":
+                libraries.extend(fields[1:])
+            elif fields[0] == "usemtl":
+                has_material_assignments = True
+    directory = os.path.dirname(os.path.abspath(path))
+    missing = [name for name in libraries if not os.path.isfile(os.path.join(directory, name))]
+    return has_material_assignments, missing
 
 
 def read_stl(path):
@@ -252,10 +287,9 @@ def write_part(output_dir, name, ldraw_points, faces, author, collider_dir=None,
     dat_path = os.path.join(output_dir, filename)
     with open(dat_path, "w", encoding="utf-8", newline="\r\n") as output:
         output.write(
-            f"0 FILE {filename}\n"
             f"0 {name}\n"
-            f"0 Name:  {filename}\n"
-            f"0 Author:  {author}\n"
+            f"0 Name: {filename}\n"
+            f"0 Author: {author}\n"
             f"0 BL_Item_No {name}\n"
             "0 BFC NOCERTIFY\n"
         )
@@ -296,8 +330,8 @@ def build_parser():
     parser.add_argument(
         "--min-piece",
         type=valid_nonnegative_float,
-        default=2.0,
-        help="remove disconnected pieces smaller than this size in mm (0 disables; default: 2)",
+        default=0.0,
+        help="remove disconnected pieces smaller than this size in mm (0 disables; default: 0)",
     )
     parser.add_argument(
         "--drop",
@@ -436,6 +470,19 @@ def run(args):
         f"Exported {len(faces)} faces; size "
         f"{size[0]:.1f} x {size[1]:.1f} x {size[2]:.1f} mm (width x height x length)"
     )
+    if extension == ".obj":
+        has_material_assignments, missing_libraries = obj_material_info(args.input)
+        if has_material_assignments:
+            print(
+                "Warning: OBJ material colors are not imported; "
+                "all DAT triangles use LDraw color 16."
+            )
+        if missing_libraries:
+            print(
+                "Missing material library file(s): "
+                + ", ".join(missing_libraries)
+                + "."
+            )
     print(f"Files: {os.path.join(parts_dir, name)}.dat")
     print(f"       {os.path.join(collider_dir, name)}.col")
     print(f"       {os.path.join(connectivity_dir, name)}.conn")

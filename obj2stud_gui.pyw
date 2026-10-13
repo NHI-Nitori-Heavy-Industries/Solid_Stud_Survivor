@@ -115,7 +115,7 @@ class Obj2StudApp:
         self.width = tk.StringVar()
         self.scale = tk.StringVar()
         self.faces = tk.StringVar()
-        self.min_piece = tk.StringVar(value="2")
+        self.min_piece = tk.StringVar(value="0")
         self.z_up = tk.BooleanVar(value=False)
         self.scanned_path = None
         self.object_vars = []
