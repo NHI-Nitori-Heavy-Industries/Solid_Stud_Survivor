@@ -1,6 +1,8 @@
-# OBJ / STL 轉 Stud.io 自訂零件工具
+# Solid Stud Survivor
 
-Windows 視窗工具，可將 OBJ 或 STL 模型轉成 Stud.io 自訂零件所需的 `.dat`、`.col`、`.conn` 三個檔案。
+[English](README.en.md)
+
+Solid Stud Survivor 是一款 Windows 視窗工具，可將 OBJ 或 STL 模型轉成 Stud.io 自訂零件所需的 `.dat`、`.col`、`.conn` 三個檔案。
 
 ## 環境需求
 
@@ -36,16 +38,18 @@ py -3.12 -m pip install fast-simplification
 
 輸入模型預設為 Y 朝上；Z 朝上的模型需勾選對應選項。輸出會將 X/Z 置中、底部放在 Y=0，並依 LDraw 座標系輸出。
 
-## 命令列模式
-
-也可在 PowerShell 使用：
-
-```powershell
-py -3.12 .\obj2stud.py .\model.obj --width 85.8 --out .\parts
-```
+## 命令列參數
 
 查看所有參數：
 
 ```powershell
 py -3.12 .\obj2stud.py --help
+```
+
+## 命令列轉換範例
+
+也可在 PowerShell 使用命令列版本：
+
+```powershell
+py -3.12 .\obj2stud.py .\model.obj --width 85.8 --out .\parts
 ```

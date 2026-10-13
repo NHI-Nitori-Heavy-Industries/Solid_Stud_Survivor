@@ -1,4 +1,4 @@
-"""Windows graphical interface for the obj2stud converter."""
+"""Windows graphical interface for Solid Stud Survivor."""
 
 import contextlib
 import io
@@ -21,7 +21,7 @@ STUDIO_CUSTOM_PARTS = os.path.join(
 class Obj2StudApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("OBJ / STL 轉 Stud.io 自訂零件")
+        self.root.title("Solid Stud Survivor")
         self.root.minsize(720, 740)
 
         self.input_path = tk.StringVar()
@@ -48,7 +48,7 @@ class Obj2StudApp:
 
         ttk.Label(
             outer,
-            text="將 OBJ 或 STL 模型轉換為 Stud.io 自訂零件",
+            text="Solid Stud Survivor — 將 OBJ 或 STL 模型轉換為 Stud.io 自訂零件",
             font=("", 12, "bold"),
         ).grid(row=0, column=0, columnspan=3, sticky="w", pady=(0, 12))
 
