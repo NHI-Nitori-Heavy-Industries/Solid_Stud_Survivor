@@ -25,7 +25,7 @@ import struct
 
 import numpy as np
 
-LDU_MM = 0.4
+LDU_MM = 0.39
 STUD_MM = 7.8
 
 
