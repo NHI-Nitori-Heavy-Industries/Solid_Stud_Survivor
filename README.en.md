@@ -7,17 +7,17 @@ Solid Stud Survivor is a Windows GUI tool that converts OBJ or STL models into t
 ## Requirements
 
 - 64-bit Windows 10 or later
-- Python 3.12
+- Python 3.11 or newer (Python 3.11 is confirmed to work)
 - NumPy
 - `fast-simplification` is optional and only required for mesh reduction
 
 ## Install and launch
 
-1. Install Python 3.12 and enable the option to add Python to PATH.
+1. Install Python 3.11 or newer and enable the option to add Python to PATH.
 2. Open a terminal in this folder and install the required package:
 
    ```powershell
-   py -3.12 -m pip install -r requirements.txt
+   py -3.11 -m pip install -r requirements.txt
    ```
 
 3. Double-click `obj2stud_gui.pyw` to open the application.
@@ -25,7 +25,7 @@ Solid Stud Survivor is a Windows GUI tool that converts OBJ or STL models into t
 To enable mesh reduction, install the optional package:
 
 ```powershell
-py -3.12 -m pip install fast-simplification
+py -3.11 -m pip install fast-simplification
 ```
 
 ## Using the GUI
@@ -49,11 +49,11 @@ OBJ `o` objects are listed as selectable components; `g` groups are used only wh
 The command-line converter can also be used in PowerShell:
 
 ```powershell
-py -3.12 .\obj2stud.py .\model.obj --width 85.8 --out .\parts
+py -3.11 .\obj2stud.py .\model.obj --width 85.8 --out .\parts
 ```
 
 To see all available options:
 
 ```powershell
-py -3.12 .\obj2stud.py --help
+py -3.11 .\obj2stud.py --help
 ```

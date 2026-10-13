@@ -7,17 +7,17 @@ Solid Stud Survivor 是一款 Windows 視窗工具，可將 OBJ 或 STL 模型�
 ## 環境需求
 
 - Windows 10 或更新版本，64 位元
-- Python 3.12
+- Python 3.11 或更新版本（已確認可使用 Python 3.11）
 - NumPy
 - 若要使用減面功能，需另外安裝 `fast-simplification`
 
 ## 安裝與啟動
 
-1. 安裝 Python 3.12，安裝時啟用將 Python 加入 PATH 的選項。
+1. 安裝 Python 3.11 或更新版本，安裝時啟用將 Python 加入 PATH 的選項。
 2. 在本資料夾開啟終端機，執行：
 
    ```powershell
-   py -3.12 -m pip install -r requirements.txt
+   py -3.11 -m pip install -r requirements.txt
    ```
 
 3. 雙擊 `obj2stud_gui.pyw` 開啟視窗。
@@ -25,7 +25,7 @@ Solid Stud Survivor 是一款 Windows 視窗工具，可將 OBJ 或 STL 模型�
 如要使用減面功能，額外執行：
 
 ```powershell
-py -3.12 -m pip install fast-simplification
+py -3.11 -m pip install fast-simplification
 ```
 
 ## 視窗操作
@@ -49,7 +49,7 @@ OBJ 的 `o` 物件會作為可選元件；若沒有 `o` 物件，才會以 `g` �
 查看所有參數：
 
 ```powershell
-py -3.12 .\obj2stud.py --help
+py -3.11 .\obj2stud.py --help
 ```
 
 ## 命令列轉換範例
@@ -57,5 +57,5 @@ py -3.12 .\obj2stud.py --help
 也可在 PowerShell 使用命令列版本：
 
 ```powershell
-py -3.12 .\obj2stud.py .\model.obj --width 85.8 --out .\parts
+py -3.11 .\obj2stud.py .\model.obj --width 85.8 --out .\parts
 ```

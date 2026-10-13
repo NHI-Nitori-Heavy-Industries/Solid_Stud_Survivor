@@ -2,7 +2,7 @@
 """Convert OBJ/STL meshes to Stud.io custom-part files (.dat/.col/.conn).
 
 Requirements:
-    Python 3.8+, numpy
+    Python 3.9+, numpy
 
 Optional mesh reduction:
     pip install fast-simplification
