@@ -17,6 +17,85 @@ STUDIO_CUSTOM_PARTS = os.path.join(
     "CustomParts",
 )
 
+TEXT = {
+    "OBJ / STL 模型檔案": "OBJ / STL model file",
+    "模型檔案": "Model file",
+    "選擇檔案...": "Browse...",
+    "輸出根資料夾": "Output folder",
+    "選擇資料夾...": "Browse...",
+    "將自動輸出至 parts、collider、connectivity 子資料夾": (
+        "Files will be placed in the parts, collider, and connectivity subfolders"
+    ),
+    "模型尺寸": "Model size",
+    "設定成品寬度": "Set finished width",
+    "設定縮放倍率": "Set scale",
+    "模型單位轉 mm，例如 0.0259": "Model units to mm, e.g. 0.0259",
+    "選項": "Options",
+    "零件名稱": "Part name",
+    "作者": "Author",
+    "小碎片下限": "Minimum piece size",
+    "mm；0 代表不刪除": "mm; 0 disables removal",
+    "減面目標": "Face target",
+    "面；留空代表保留原面數": "faces; leave blank to keep all faces",
+    "模型使用 Z 朝上座標": "Model uses Z-up coordinates",
+    "模型物件（掃描後勾選要輸出的元件，預設全選）": (
+        "Model objects (scan, then select objects to export; all selected by default)"
+    ),
+    "重新讀取物件": "Rescan objects",
+    "全選": "Select all",
+    "全不選": "Select none",
+    "開始轉換": "Start conversion",
+    "訊息": "Messages",
+    "轉換完成": "Conversion complete",
+    "轉換失敗": "Conversion failed",
+    "物件掃描失敗。": "Object scan failed.",
+    "物件掃描完成。": "Object scan complete.",
+    "正在讀取模型物件...": "Reading model objects...",
+    "正在讀取模型物件名稱與面數...": "Reading object names and face counts...",
+    "模型中沒有可輸出的三角面。": "The model contains no exportable triangles.",
+    "請先選擇模型檔案，程式會讀取物件名稱與面數。": (
+        "Choose a model file to scan its object names and face counts."
+    ),
+    "請選擇 OBJ 或 STL 模型檔案。": "Select an OBJ or STL model file.",
+    "轉換中，模型較大時可能需要一些時間...": (
+        "Converting; large models may take some time..."
+    ),
+    "正在讀取模型物件...": "Reading model objects...",
+    "正在讀取模型物件名稱與面數...": "Reading object names and face counts...",
+    "物件掃描失敗。": "Object scan failed.",
+    "物件掃描完成。": "Object scan complete.",
+    "轉換完成。": "Conversion complete.",
+    "轉換失敗。": "Conversion failed.",
+    "請選擇 OBJ 或 STL 模型檔案。": "Select an OBJ or STL model file.",
+    "模型讀取錯誤": "Model read error",
+    "設定錯誤": "Invalid settings",
+    "讀取失敗：{error}": "Read failed: {error}",
+    "共 {count} 個物件，{faces:,} 面（初始全選）": (
+        "{count} objects, {faces:,} faces (all selected by default)"
+    ),
+    "{name}  —  {faces:,} 面": "{name}  —  {faces:,} faces",
+    "請先選擇 OBJ 或 STL 模型檔案。": "Select an OBJ or STL model file first.",
+    "找不到指定的模型檔案。": "The selected model file could not be found.",
+    "模型檔案必須是 .obj 或 .stl 格式。": "The model file must be an .obj or .stl file.",
+    "請先讀取目前模型的物件清單，再選擇要輸出的元件。": (
+        "Scan the current model and select objects to export first."
+    ),
+    "請至少勾選一個要輸出的物件。": "Select at least one object to export.",
+    "請指定輸出根資料夾。": "Choose an output folder.",
+    "小碎片下限必須是大於或等於 0 的數字。": (
+        "Minimum piece size must be a number greater than or equal to 0."
+    ),
+    "請輸入有效且大於 0 的尺寸或縮放倍率。": (
+        "Enter a valid width or scale greater than 0."
+    ),
+    "減面目標必須是正整數，或留空以保留原面數。": (
+        "Face target must be a positive integer, or blank to keep all faces."
+    ),
+    "減面目標必須大於 0。": "Face target must be greater than 0.",
+    "轉換中": "Converting",
+    "轉換完成提示": "Stud.io custom-part files have been exported.",
+}
+
 
 class Obj2StudApp:
     def __init__(self, root):
@@ -24,6 +103,8 @@ class Obj2StudApp:
         self.root.title("Solid Stud Survivor")
         self.root.minsize(720, 740)
 
+        self.language = "zh"
+        self.language_choice = tk.StringVar(value="繁體中文")
         self.input_path = tk.StringVar()
         self.output_dir = tk.StringVar(value=STUDIO_CUSTOM_PARTS)
         self.part_name = tk.StringVar()
@@ -35,6 +116,8 @@ class Obj2StudApp:
         self.z_up = tk.BooleanVar(value=False)
         self.scanned_path = None
         self.object_vars = []
+        self.object_data = []
+        self.object_message = "請先選擇模型檔案，程式會讀取物件名稱與面數。"
         self.scan_generation = 0
 
         self._build_ui()
@@ -46,11 +129,25 @@ class Obj2StudApp:
         outer.rowconfigure(6, weight=1)
         outer.rowconfigure(10, weight=1)
 
-        ttk.Label(
-            outer,
+        title_bar = ttk.Frame(outer)
+        title_bar.grid(row=0, column=0, columnspan=3, sticky="ew", pady=(0, 12))
+        title_bar.columnconfigure(0, weight=1)
+        self.title_label = ttk.Label(
+            title_bar,
             text="Solid Stud Survivor — 將 OBJ 或 STL 模型轉換為 Stud.io 自訂零件",
             font=("", 12, "bold"),
-        ).grid(row=0, column=0, columnspan=3, sticky="w", pady=(0, 12))
+        )
+        self.title_label.grid(row=0, column=0, sticky="w")
+        ttk.Label(title_bar, text="語言 / Language").grid(row=0, column=1, padx=(8, 4))
+        self.language_selector = ttk.Combobox(
+            title_bar,
+            textvariable=self.language_choice,
+            values=("繁體中文", "English"),
+            state="readonly",
+            width=12,
+        )
+        self.language_selector.grid(row=0, column=2, sticky="e")
+        self.language_selector.bind("<<ComboboxSelected>>", self._change_language)
 
         ttk.Label(outer, text="模型檔案").grid(row=1, column=0, sticky="w", padx=(0, 8), pady=4)
         ttk.Entry(outer, textvariable=self.input_path).grid(row=1, column=1, sticky="ew", pady=4)
@@ -166,7 +263,7 @@ class Obj2StudApp:
         )
         self.object_list.bind("<Configure>", self._update_object_scrollregion)
         self.object_canvas.bind("<Configure>", self._resize_object_list)
-        self._show_object_message("請先選擇模型檔案，程式會讀取物件名稱與面數。")
+        self._show_object_message(self.object_message)
 
         actions = ttk.Frame(outer)
         actions.grid(row=8, column=0, columnspan=3, sticky="ew", pady=(8, 6))
@@ -191,11 +288,16 @@ class Obj2StudApp:
         self.log.configure(yscrollcommand=log_scrollbar.set)
 
         self._update_size_controls()
+        self._apply_language()
 
     def _choose_input(self):
         path = filedialog.askopenfilename(
-            title="選擇模型檔案",
-            filetypes=[("3D 模型", "*.obj *.stl"), ("OBJ 模型", "*.obj"), ("STL 模型", "*.stl")],
+            title=self._tr("模型檔案"),
+            filetypes=[
+                (self._tr("OBJ / STL 模型檔案"), "*.obj *.stl"),
+                ("OBJ", "*.obj"),
+                ("STL", "*.stl"),
+            ],
         )
         if path:
             self.input_path.set(path)
@@ -204,11 +306,52 @@ class Obj2StudApp:
 
     def _choose_output(self):
         path = filedialog.askdirectory(
-            title="選擇輸出根資料夾",
+            title=self._tr("輸出根資料夾"),
             initialdir=self.output_dir.get() or STUDIO_CUSTOM_PARTS,
         )
         if path:
             self.output_dir.set(path)
+
+    def _tr(self, text):
+        if self.language == "en":
+            return TEXT.get(text, text)
+        english_to_chinese = {english: chinese for chinese, english in TEXT.items()}
+        return english_to_chinese.get(text, text)
+
+    def _change_language(self, _event=None):
+        self.language = "en" if self.language_choice.get() == "English" else "zh"
+        self._apply_language()
+
+    def _apply_language(self):
+        self.root.title("Solid Stud Survivor")
+        self.title_label.configure(
+            text=self._tr("將 OBJ 或 STL 模型轉換為 Stud.io 自訂零件")
+            if self.language == "en"
+            else "Solid Stud Survivor — 將 OBJ 或 STL 模型轉換為 Stud.io 自訂零件"
+        )
+        for parent in (self.root,):
+            self._translate_widgets(parent)
+        self.status.set(self._tr(self.status.get()))
+        self._render_objects()
+
+    def _translate_widgets(self, parent):
+        for child in parent.winfo_children():
+            if child is self.title_label or child is self.language_selector:
+                continue
+            try:
+                current_text = child.cget("text")
+            except tk.TclError:
+                current_text = None
+            if current_text in TEXT:
+                child.configure(text=self._tr(current_text))
+            elif self.language == "zh":
+                translated = self._tr(current_text)
+                if translated != current_text:
+                    child.configure(text=translated)
+            self._translate_widgets(child)
+
+    def _tr_format(self, template, **values):
+        return self._tr(template).format(**values)
 
     def _update_size_controls(self):
         if self.size_mode.get() == "width":
@@ -221,11 +364,11 @@ class Obj2StudApp:
     def _selected_input(self):
         path = self.input_path.get().strip()
         if not path:
-            raise ValueError("請先選擇 OBJ 或 STL 模型檔案。")
+            raise ValueError(self._tr("請先選擇 OBJ 或 STL 模型檔案。"))
         if not os.path.isfile(path):
-            raise ValueError("找不到指定的模型檔案。")
+            raise ValueError(self._tr("找不到指定的模型檔案。"))
         if os.path.splitext(path)[1].lower() not in (".obj", ".stl"):
-            raise ValueError("模型檔案必須是 .obj 或 .stl 格式。")
+            raise ValueError(self._tr("模型檔案必須是 .obj 或 .stl 格式。"))
         return path
 
     def _set_log(self, text, clear=False):
@@ -240,10 +383,36 @@ class Obj2StudApp:
         self.log.configure(state="disabled")
 
     def _show_object_message(self, text):
+        self.object_message = text
+        self.object_data.clear()
+        self.object_vars.clear()
+        self._render_objects()
+
+    def _render_objects(self):
+        if not hasattr(self, "object_list"):
+            return
         for child in self.object_list.winfo_children():
             child.destroy()
-        self.object_vars.clear()
-        ttk.Label(self.object_list, text=text).grid(row=0, column=0, sticky="w", padx=4, pady=4)
+        if self.object_data:
+            for row, (name, face_count, selected) in enumerate(self.object_data):
+                ttk.Checkbutton(
+                    self.object_list,
+                    text=self._tr_format("{name}  —  {faces:,} 面", name=name, faces=face_count),
+                    variable=selected,
+                ).grid(row=row, column=0, sticky="w", padx=4, pady=1)
+            total_faces = sum(face_count for _, face_count, _ in self.object_data)
+            ttk.Label(
+                self.object_list,
+                text=self._tr_format(
+                    "共 {count} 個物件，{faces:,} 面（初始全選）",
+                    count=len(self.object_data),
+                    faces=total_faces,
+                ),
+            ).grid(row=len(self.object_data), column=0, sticky="w", padx=4, pady=(5, 4))
+        else:
+            ttk.Label(
+                self.object_list, text=self._tr(self.object_message)
+            ).grid(row=0, column=0, sticky="w", padx=4, pady=4)
         self.object_canvas.configure(scrollregion=self.object_canvas.bbox("all"))
 
     def _update_object_scrollregion(self, _event=None):
@@ -258,13 +427,13 @@ class Obj2StudApp:
         self.scan_button.configure(state=state)
         self.select_all_button.configure(state=state)
         self.select_none_button.configure(state=state)
-        self.status.set(status)
+        self.status.set(self._tr(status))
 
     def _scan_objects(self):
         try:
             path = self._selected_input()
         except ValueError as exc:
-            messagebox.showerror("無法讀取模型", str(exc), parent=self.root)
+            messagebox.showerror(self._tr("模型讀取錯誤"), str(exc), parent=self.root)
             return
         self.scan_generation += 1
         generation = self.scan_generation
@@ -293,8 +462,8 @@ class Obj2StudApp:
         self._set_busy(False, "物件掃描失敗。" if error else "物件掃描完成。")
         if error is not None:
             self.scanned_path = None
-            self._show_object_message(f"讀取失敗：{error}")
-            messagebox.showerror("無法讀取模型", error, parent=self.root)
+            self._show_object_message(self._tr_format("讀取失敗：{error}", error=error))
+            messagebox.showerror(self._tr("模型讀取錯誤"), error, parent=self.root)
             return
         if not groups:
             self.scanned_path = None
@@ -302,23 +471,13 @@ class Obj2StudApp:
             return
 
         self.scanned_path = os.path.normcase(os.path.abspath(path))
-        for child in self.object_list.winfo_children():
-            child.destroy()
         self.object_vars.clear()
-        for row, (name, faces) in enumerate(groups):
+        self.object_data.clear()
+        for name, faces in groups:
             selected = tk.BooleanVar(value=True)
             self.object_vars.append((name, selected))
-            ttk.Checkbutton(
-                self.object_list,
-                text=f"{name}  —  {len(faces):,} 面",
-                variable=selected,
-            ).grid(row=row, column=0, sticky="w", padx=4, pady=1)
-        total_faces = sum(len(faces) for _, faces in groups)
-        ttk.Label(
-            self.object_list,
-            text=f"共 {len(groups)} 個物件，{total_faces:,} 面（初始全選）",
-        ).grid(row=len(groups), column=0, sticky="w", padx=4, pady=(5, 4))
-        self.object_canvas.configure(scrollregion=self.object_canvas.bbox("all"))
+            self.object_data.append((name, len(faces), selected))
+        self._render_objects()
 
     def _select_objects(self, selected):
         for _, variable in self.object_vars:
@@ -328,14 +487,16 @@ class Obj2StudApp:
         input_path = self._selected_input()
         normalized_path = os.path.normcase(os.path.abspath(input_path))
         if self.scanned_path != normalized_path:
-            raise ValueError("請先讀取目前模型的物件清單，再選擇要輸出的元件。")
+            raise ValueError(
+                self._tr("請先讀取目前模型的物件清單，再選擇要輸出的元件。")
+            )
         included_objects = [name for name, variable in self.object_vars if variable.get()]
         if not included_objects:
-            raise ValueError("請至少勾選一個要輸出的物件。")
+            raise ValueError(self._tr("請至少勾選一個要輸出的物件。"))
 
         output_value = os.path.expandvars(self.output_dir.get().strip())
         if not output_value:
-            raise ValueError("請指定輸出根資料夾。")
+            raise ValueError(self._tr("請指定輸出根資料夾。"))
         output_root = os.path.abspath(output_value)
         parts_dir = os.path.join(output_root, "parts")
         collider_dir = os.path.join(output_root, "collider")
@@ -344,7 +505,7 @@ class Obj2StudApp:
         try:
             min_piece = obj2stud.valid_nonnegative_float(self.min_piece.get().strip())
         except (ValueError, TypeError) as exc:
-            raise ValueError("小碎片下限必須是大於或等於 0 的數字。") from exc
+            raise ValueError(self._tr("小碎片下限必須是大於或等於 0 的數字。")) from exc
 
         width = None
         scale = None
@@ -354,15 +515,17 @@ class Obj2StudApp:
             else:
                 scale = obj2stud.valid_positive_float(self.scale.get().strip())
         except (ValueError, TypeError) as exc:
-            raise ValueError("請輸入有效且大於 0 的尺寸或縮放倍率。") from exc
+            raise ValueError(self._tr("請輸入有效且大於 0 的尺寸或縮放倍率。")) from exc
 
         faces_text = self.faces.get().strip()
         try:
             target_faces = int(faces_text) if faces_text else None
         except ValueError as exc:
-            raise ValueError("減面目標必須是正整數，或留空以保留原面數。") from exc
+            raise ValueError(
+                self._tr("減面目標必須是正整數，或留空以保留原面數。")
+            ) from exc
         if target_faces is not None and target_faces <= 0:
-            raise ValueError("減面目標必須大於 0。")
+            raise ValueError(self._tr("減面目標必須大於 0。"))
 
         name = self.part_name.get().strip() or os.path.splitext(os.path.basename(input_path))[0]
         obj2stud.validate_part_name(name)
@@ -389,7 +552,7 @@ class Obj2StudApp:
         try:
             arguments = self._make_arguments()
         except ValueError as exc:
-            messagebox.showerror("設定有誤", str(exc), parent=self.root)
+            messagebox.showerror(self._tr("設定錯誤"), str(exc), parent=self.root)
             return
 
         self._set_busy(True, "轉換中，模型較大時可能需要一些時間...")
@@ -411,9 +574,13 @@ class Obj2StudApp:
         self._set_busy(False, "轉換完成。" if error is None else "轉換失敗。")
         self._set_log(output if error is None else f"{output}錯誤：{error}", clear=True)
         if error is None:
-            messagebox.showinfo("轉換完成", "Stud.io 自訂零件檔案已輸出。", parent=self.root)
+            messagebox.showinfo(
+                self._tr("轉換完成"),
+                self._tr("轉換完成提示"),
+                parent=self.root,
+            )
         else:
-            messagebox.showerror("轉換失敗", error, parent=self.root)
+            messagebox.showerror(self._tr("轉換失敗"), error, parent=self.root)
 
 
 def main():

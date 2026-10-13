@@ -30,6 +30,8 @@ py -3.12 -m pip install fast-simplification
 
 ## 視窗操作
 
+視窗右上角可切換繁體中文或 English。
+
 1. 選擇 `.obj` 或 `.stl` 模型檔案。
 2. 選檔後程式會讀取物件名稱與面數，勾選要輸出的物件（預設全選）。
 3. 預設輸出根資料夾為 `%LOCALAPPDATA%\Stud.io\CustomParts`，程式會將三種檔案分別放入 `parts`、`collider`、`connectivity` 子資料夾；也可在視窗選擇其他輸出根資料夾。

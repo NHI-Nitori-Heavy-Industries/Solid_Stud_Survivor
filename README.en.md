@@ -30,6 +30,8 @@ py -3.12 -m pip install fast-simplification
 
 ## Using the GUI
 
+Use the language selector in the upper-right corner to switch between Traditional Chinese and English.
+
 1. Select an `.obj` or `.stl` model.
 2. The application scans the model and lists object names and face counts. Select the objects to export; all objects are selected by default.
 3. The default output root is `%LOCALAPPDATA%\Stud.io\CustomParts`. The application places the files in the `parts`, `collider`, and `connectivity` subfolders. You can choose a different output root in the window.
