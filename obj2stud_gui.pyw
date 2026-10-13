@@ -18,6 +18,9 @@ STUDIO_CUSTOM_PARTS = os.path.join(
 )
 
 TEXT = {
+    "將 OBJ 或 STL 模型轉換為 Stud.io 自訂零件": (
+        "Convert OBJ or STL models into Stud.io custom parts"
+    ),
     "OBJ / STL 模型檔案": "OBJ / STL model file",
     "模型檔案": "Model file",
     "選擇檔案...": "Browse...",
@@ -134,7 +137,7 @@ class Obj2StudApp:
         title_bar.columnconfigure(0, weight=1)
         self.title_label = ttk.Label(
             title_bar,
-            text="Solid Stud Survivor — 將 OBJ 或 STL 模型轉換為 Stud.io 自訂零件",
+            text="將 OBJ 或 STL 模型轉換為 Stud.io 自訂零件",
             font=("", 12, "bold"),
         )
         self.title_label.grid(row=0, column=0, sticky="w")
@@ -326,8 +329,6 @@ class Obj2StudApp:
         self.root.title("Solid Stud Survivor")
         self.title_label.configure(
             text=self._tr("將 OBJ 或 STL 模型轉換為 Stud.io 自訂零件")
-            if self.language == "en"
-            else "Solid Stud Survivor — 將 OBJ 或 STL 模型轉換為 Stud.io 自訂零件"
         )
         for parent in (self.root,):
             self._translate_widgets(parent)
