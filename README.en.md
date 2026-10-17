@@ -9,6 +9,7 @@ Solid Stud Survivor is a Windows GUI tool that converts OBJ or STL models into t
 - 64-bit Windows 10 or later
 - Python 3.9 or newer
 - NumPy
+- Pillow (used for PNG decals)
 - `fast-simplification` is optional and only required for mesh reduction
 
 ## Install and launch
@@ -43,6 +44,22 @@ After conversion, the message panel shows the model's width, height, and length 
 Input models are assumed to use Y-up coordinates. Enable the Z-up option for models that use Z as the up axis. The output is centered in X/Z, rests at Y=0, and uses the LDraw coordinate system.
 
 OBJ `o` objects are listed as selectable components; `g` groups are used only when the OBJ has no `o` objects. OBJ material colors are not currently imported, so output triangles use the Stud.io part's main color. If a referenced `.mtl` file is missing, its source color information is unavailable.
+
+## Single-colour PNG decals
+
+When a `.png` file is selected, the image is converted into a single-colour slab 0.05 mm thick (adjustable with **Decal thickness**):
+
+- Opaque pixels form the pattern by default. For dark artwork on an opaque light background, enable **PNG: use dark pixels as the pattern**.
+- The finished width applies to the pattern's extent after surrounding blank space is cropped; in scale mode the value is millimeters per pixel.
+- The slab lies flat in the X/Z plane with its bottom at Y=0, and the top edge of the image points to the back of the part. It uses the Stud.io part's main color.
+- Images whose longest side exceeds 512 pixels are downsampled first to keep the face count manageable.
+
+Command-line examples:
+
+```powershell
+py -3.9 .\png2decal.py .\logo.png --width 15.6 --out .\parts
+py -3.9 .\png2decal.py .\logo.png --width 15.6 --mask dark --thickness 0.05
+```
 
 ## Command-line conversion
 

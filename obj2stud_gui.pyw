@@ -9,6 +9,7 @@ from tkinter import filedialog, messagebox, ttk
 from types import SimpleNamespace
 
 import obj2stud
+import png2decal
 
 AUTHOR = "Aioli"
 STUDIO_CUSTOM_PARTS = os.path.join(
@@ -18,10 +19,26 @@ STUDIO_CUSTOM_PARTS = os.path.join(
 )
 
 TEXT = {
-    "將 OBJ 或 STL 模型轉換為 Stud.io 自訂零件": (
-        "Convert OBJ or STL models into Stud.io custom parts"
+    "將 OBJ、STL 模型或 PNG 水貼紙轉換為 Stud.io 自訂零件": (
+        "Convert OBJ/STL models or PNG decals into Stud.io custom parts"
     ),
-    "OBJ / STL 模型檔案": "OBJ / STL model file",
+    "OBJ / STL 模型或 PNG 圖片": "OBJ / STL model or PNG image",
+    "PNG 圖片": "PNG image",
+    "模型單位轉 mm（PNG 為每像素 mm），例如 0.0259": (
+        "Model units to mm (mm per pixel for PNG), e.g. 0.0259"
+    ),
+    "水貼紙厚度": "Decal thickness",
+    "mm；僅用於 PNG": "mm; PNG only",
+    "PNG 以深色像素為圖案（背景不透明時使用）": (
+        "PNG: use dark pixels as the pattern (for opaque backgrounds)"
+    ),
+    "PNG 會轉為單色水貼紙：不透明像素為圖案，平放於 X/Z 平面。": (
+        "The PNG becomes a single-colour decal: opaque pixels form the pattern, lying flat in the X/Z plane."
+    ),
+    "水貼紙厚度必須是大於 0 的數字。": "Decal thickness must be a number greater than 0.",
+    "請選擇 OBJ、STL 或 PNG 檔案。": "Select an OBJ, STL, or PNG file.",
+    "請先選擇 OBJ、STL 或 PNG 檔案。": "Select an OBJ, STL, or PNG file first.",
+    "檔案必須是 .obj、.stl 或 .png 格式。": "The file must be an .obj, .stl, or .png file.",
     "模型檔案": "Model file",
     "選擇檔案...": "Browse...",
     "輸出根資料夾": "Output folder",
@@ -122,6 +139,8 @@ class Obj2StudApp:
         self.faces = tk.StringVar()
         self.min_piece = tk.StringVar(value="0")
         self.z_up = tk.BooleanVar(value=False)
+        self.thickness = tk.StringVar(value=f"{png2decal.DEFAULT_THICKNESS_MM:g}")
+        self.dark_mask = tk.BooleanVar(value=False)
         self.scanned_path = None
         self.object_vars = []
         self.object_data = []
@@ -142,7 +161,7 @@ class Obj2StudApp:
         title_bar.columnconfigure(0, weight=1)
         self.title_label = ttk.Label(
             title_bar,
-            text="將 OBJ 或 STL 模型轉換為 Stud.io 自訂零件",
+            text="將 OBJ、STL 模型或 PNG 水貼紙轉換為 Stud.io 自訂零件",
             font=("", 12, "bold"),
         )
         self.title_label.grid(row=0, column=0, sticky="w")
@@ -209,7 +228,7 @@ class Obj2StudApp:
         ).grid(row=1, column=0, sticky="w", pady=(6, 0))
         self.scale_entry = ttk.Entry(sizing, textvariable=self.scale, width=12)
         self.scale_entry.grid(row=1, column=1, sticky="w", padx=(8, 4), pady=(6, 0))
-        ttk.Label(sizing, text="模型單位轉 mm，例如 0.0259").grid(
+        ttk.Label(sizing, text="模型單位轉 mm（PNG 為每像素 mm），例如 0.0259").grid(
             row=1, column=2, columnspan=2, sticky="w", pady=(6, 0)
         )
 
@@ -243,6 +262,20 @@ class Obj2StudApp:
         ttk.Checkbutton(options, text="模型使用 Z 朝上座標", variable=self.z_up).grid(
             row=4, column=1, sticky="w", pady=(3, 0)
         )
+        ttk.Label(options, text="水貼紙厚度").grid(
+            row=5, column=0, sticky="w", padx=(0, 8), pady=3
+        )
+        ttk.Entry(options, textvariable=self.thickness, width=12).grid(
+            row=5, column=1, sticky="w", pady=3
+        )
+        ttk.Label(options, text="mm；僅用於 PNG").grid(
+            row=5, column=1, sticky="w", padx=(105, 0)
+        )
+        ttk.Checkbutton(
+            options,
+            text="PNG 以深色像素為圖案（背景不透明時使用）",
+            variable=self.dark_mask,
+        ).grid(row=6, column=1, sticky="w", pady=(3, 0))
 
         object_frame = ttk.LabelFrame(
             outer,
@@ -289,7 +322,7 @@ class Obj2StudApp:
         )
         self.convert_button.pack(side="right")
 
-        self.status = tk.StringVar(value="請選擇 OBJ 或 STL 模型檔案。")
+        self.status = tk.StringVar(value="請選擇 OBJ、STL 或 PNG 檔案。")
         ttk.Label(outer, textvariable=self.status).grid(
             row=9, column=0, columnspan=3, sticky="w", pady=(0, 4)
         )
@@ -311,9 +344,10 @@ class Obj2StudApp:
         path = filedialog.askopenfilename(
             title=self._tr("模型檔案"),
             filetypes=[
-                (self._tr("OBJ / STL 模型檔案"), "*.obj *.stl"),
+                (self._tr("OBJ / STL 模型或 PNG 圖片"), "*.obj *.stl *.png"),
                 ("OBJ", "*.obj"),
                 ("STL", "*.stl"),
+                (self._tr("PNG 圖片"), "*.png"),
             ],
         )
         if path:
@@ -342,7 +376,7 @@ class Obj2StudApp:
     def _apply_language(self):
         self.root.title("Solid Stud Survivor")
         self.title_label.configure(
-            text=self._tr("將 OBJ 或 STL 模型轉換為 Stud.io 自訂零件")
+            text=self._tr("將 OBJ、STL 模型或 PNG 水貼紙轉換為 Stud.io 自訂零件")
         )
         for parent in (self.root,):
             self._translate_widgets(parent)
@@ -395,12 +429,16 @@ class Obj2StudApp:
     def _selected_input(self):
         path = self.input_path.get().strip()
         if not path:
-            raise ValueError(self._tr("請先選擇 OBJ 或 STL 模型檔案。"))
+            raise ValueError(self._tr("請先選擇 OBJ、STL 或 PNG 檔案。"))
         if not os.path.isfile(path):
             raise ValueError(self._tr("找不到指定的模型檔案。"))
-        if os.path.splitext(path)[1].lower() not in (".obj", ".stl"):
-            raise ValueError(self._tr("模型檔案必須是 .obj 或 .stl 格式。"))
+        if os.path.splitext(path)[1].lower() not in (".obj", ".stl", ".png"):
+            raise ValueError(self._tr("檔案必須是 .obj、.stl 或 .png 格式。"))
         return path
+
+    @staticmethod
+    def _is_png(path):
+        return os.path.splitext(path)[1].lower() == ".png"
 
     def _set_log(self, text, clear=False):
         self.log.configure(state="normal")
@@ -468,6 +506,12 @@ class Obj2StudApp:
             return
         self.scan_generation += 1
         generation = self.scan_generation
+        if self._is_png(path):
+            self.scanned_path = os.path.normcase(os.path.abspath(path))
+            self._show_object_message(
+                "PNG 會轉為單色水貼紙：不透明像素為圖案，平放於 X/Z 平面。"
+            )
+            return
         self.scanned_path = None
         self._show_object_message("正在讀取模型物件...")
         self._set_busy(True, "正在讀取模型物件名稱與面數...")
@@ -516,13 +560,14 @@ class Obj2StudApp:
 
     def _make_arguments(self):
         input_path = self._selected_input()
+        is_png = self._is_png(input_path)
         normalized_path = os.path.normcase(os.path.abspath(input_path))
-        if self.scanned_path != normalized_path:
+        if not is_png and self.scanned_path != normalized_path:
             raise ValueError(
                 self._tr("請先讀取目前模型的物件清單，再選擇要輸出的元件。")
             )
         included_objects = [name for name, variable in self.object_vars if variable.get()]
-        if not included_objects:
+        if not is_png and not included_objects:
             raise ValueError(self._tr("請至少勾選一個要輸出的物件。"))
 
         output_value = os.path.expandvars(self.output_dir.get().strip())
@@ -552,6 +597,29 @@ class Obj2StudApp:
                 scale = obj2stud.valid_positive_float(self.scale.get().strip())
         except (ValueError, TypeError) as exc:
             raise ValueError(self._tr("請輸入有效且大於 0 的尺寸或縮放倍率。")) from exc
+
+        if is_png:
+            try:
+                thickness = obj2stud.valid_positive_float(self.thickness.get().strip())
+            except (ValueError, TypeError) as exc:
+                raise ValueError(self._tr("水貼紙厚度必須是大於 0 的數字。")) from exc
+            name = self.part_name.get().strip() or os.path.splitext(os.path.basename(input_path))[0]
+            obj2stud.validate_part_name(name)
+            return SimpleNamespace(
+                input=input_path,
+                width=width,
+                scale=scale,
+                thickness=thickness,
+                mask="dark" if self.dark_mask.get() else "alpha",
+                threshold=128,
+                max_pixels=512,
+                name=name,
+                out=output_root,
+                parts_dir=parts_dir,
+                collider_dir=collider_dir,
+                connectivity_dir=connectivity_dir,
+                author=AUTHOR,
+            )
 
         faces_text = self.faces.get().strip()
         try:
@@ -600,8 +668,9 @@ class Obj2StudApp:
     def _conversion_worker(self, arguments):
         output = io.StringIO()
         try:
+            converter = png2decal if self._is_png(arguments.input) else obj2stud
             with contextlib.redirect_stdout(output):
-                obj2stud.run(arguments)
+                converter.run(arguments)
             self.root.after(0, self._finish_conversion, output.getvalue(), None)
         except (OSError, RuntimeError, ValueError) as exc:
             self.root.after(0, self._finish_conversion, output.getvalue(), str(exc))

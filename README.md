@@ -9,6 +9,7 @@ Solid Stud Survivor 是一款 Windows 視窗工具，可將 OBJ 或 STL 模型�
 - Windows 10 或更新版本，64 位元
 - Python 3.9 或更新版本
 - NumPy
+- Pillow（PNG 水貼紙功能使用）
 - 若要使用減面功能，需另外安裝 `fast-simplification`
 
 ## 安裝與啟動
@@ -43,6 +44,22 @@ py -3.9 -m pip install fast-simplification
 輸入模型預設為 Y 朝上；Z 朝上的模型需勾選對應選項。輸出會將 X/Z 置中、底部放在 Y=0，並依 LDraw 座標系輸出。
 
 OBJ 的 `o` 物件會作為可選元件；若沒有 `o` 物件，才會以 `g` 群組作為元件。OBJ 材質顏色目前不會匯入，輸出的三角面會使用 Stud.io 零件主色。若模型引用 `.mtl` 材質檔但該檔案缺失，原始顏色資訊便無法取得。
+
+## PNG 單色水貼紙
+
+選擇 `.png` 檔案時，程式會將圖案轉成厚度 0.05 mm（可在「水貼紙厚度」調整）的單色薄片：
+
+- 預設以不透明像素為圖案；若圖片是白底黑圖、沒有透明背景，請勾選「PNG 以深色像素為圖案」。
+- 成品寬度以圖案實際範圍（裁掉周圍空白）計算；縮放倍率模式則代表每個像素的 mm 數。
+- 薄片平放於 X/Z 平面，底部在 Y=0，圖片上緣朝向零件後方。顏色使用 Stud.io 零件主色。
+- 圖片最長邊超過 512 像素時會先縮小，以控制面數。
+
+命令列範例：
+
+```powershell
+py -3.9 .\png2decal.py .\logo.png --width 15.6 --out .\parts
+py -3.9 .\png2decal.py .\logo.png --width 15.6 --mask dark --thickness 0.05
+```
 
 ## 命令列參數
 
